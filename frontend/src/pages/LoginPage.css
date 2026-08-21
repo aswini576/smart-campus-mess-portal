@@ -1,0 +1,36 @@
+.portal-login { min-height: 100vh; display: grid; grid-template-columns: 52% 48%; background: #fff7ed; color: #1e293b; }
+.portal-login__brand, .portal-login__form-side { position: relative; display: grid; place-items: center; min-height: 100vh; overflow: hidden; padding: 48px; }
+.portal-login__brand { background: radial-gradient(circle at 48% 36%, #ffe1d2 0, #fff0e5 38%, #fff7ed 76%); border-right: 1px solid #e7e5e4; }
+.portal-login__glow { position: absolute; width: 520px; height: 520px; border-radius: 50%; background: rgba(255,87,34,.16); filter: blur(80px); }
+.portal-login__brand-content { z-index: 1; width: min(100%, 650px); text-align: center; }
+.portal-login__logo { position: relative; z-index: 2; align-self: center; width: 120px; height: 120px; margin: 0 auto 10px; display: grid; place-items: center; flex-shrink: 0; border-radius: 34px; background: linear-gradient(145deg, #ff5a36, #f44336); box-shadow: 0 24px 55px rgba(244,67,54,.34); animation: campus-logo-float 2.6s ease-in-out infinite; will-change: transform; }
+.portal-login__logo svg { color: #ffffff; fill: #ffffff; font-size: 68px; }
+.portal-login__name { font-size: clamp(3rem, 5vw, 4.6rem) !important; line-height: 1 !important; font-weight: 900 !important; letter-spacing: -.06em !important; }
+.portal-login__name span { color: #ff5722; }
+.portal-login__tagline { max-width: 620px; font-size: clamp(1.15rem, 2vw, 1.55rem) !important; font-weight: 750 !important; color: #9a3412; }
+.portal-login__description { max-width: 600px; font-size: 1.05rem !important; line-height: 1.8 !important; color: #64748b; }
+.portal-login__chip { color: #c2410c !important; border: 1px solid #fed7aa !important; background: #fff7ed !important; font-weight: 700 !important; }
+.portal-login__copyright { margin-top: 12px !important; color: #64748b; font-size: .78rem !important; font-weight: 800 !important; letter-spacing: .12em !important; }
+.portal-login__form-side { background: linear-gradient(135deg, #fff7ed, #ffedd5); }
+.portal-login__card { position: relative; width: min(100%, 520px); padding: clamp(32px, 4vw, 48px); border: 1px solid #e7e5e4; border-radius: 0 0 30px 30px !important; background: #ffffff !important; color: #1e293b !important; box-shadow: 0 22px 52px rgba(30,41,59,.12) !important; }
+.portal-login__accent { position: absolute; top: 0; left: 0; right: 0; height: 6px; border-radius: 30px 30px 0 0; background: linear-gradient(90deg, #ff7043, #e53935); }
+.portal-login__eyebrow { color: #ff7043; font-size: .75rem !important; font-weight: 900 !important; letter-spacing: .22em !important; }
+.portal-login__heading { margin-top: 8px !important; font-size: 2.25rem !important; font-weight: 900 !important; }
+.portal-login__helper { color: #64748b; }
+.portal-login__card .MuiInputLabel-root { color: #64748b; }
+.portal-login__card .MuiOutlinedInput-root { color: #1e293b; background: #ffffff; }
+.portal-login__card .MuiOutlinedInput-notchedOutline { border-color: #cbd5e1; }
+.portal-login__card .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline { border-color: #ff7043; }
+.portal-login__card .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline { border-color: #ff5722; }
+.portal-login__card .MuiInputLabel-root.Mui-focused, .portal-login__card .MuiCheckbox-root.Mui-checked { color: #ff5722; }
+.portal-login__options { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.portal-login__options .MuiFormControlLabel-label { font-size: .9rem; color: #64748b; }
+.portal-login__options .MuiButton-root, .portal-login__switch .MuiButton-root { color: #ff7043; font-weight: 800; text-transform: none; }
+.portal-login__submit { min-height: 58px !important; border-radius: 15px !important; background: linear-gradient(90deg, #ff5722, #e53935) !important; box-shadow: 0 14px 32px rgba(229,57,53,.28) !important; font-size: 1rem !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: .05em !important; }
+.portal-login__submit:hover { transform: translateY(-2px); box-shadow: 0 18px 38px rgba(229,57,53,.38) !important; }
+.portal-login__switch { text-align: center; color: #64748b; font-size: .9rem !important; }
+.portal-login__card-footer { margin-top: 28px !important; text-align: center; color: #64748b; font-size: .7rem !important; font-weight: 800 !important; letter-spacing: .08em !important; }
+@keyframes campus-logo-float { 0%,100% { transform: translateY(-8px); } 50% { transform: translateY(-30px); } }
+@media (max-width: 900px) { .portal-login { grid-template-columns: 1fr; } .portal-login__brand, .portal-login__form-side { min-height: auto; padding: 64px 22px; } .portal-login__logo { width: 92px; height: 92px; border-radius: 26px; } .portal-login__logo svg { font-size: 52px; } }
+@media (max-width: 480px) { .portal-login__brand { padding-block: 48px; } .portal-login__form-side { padding: 28px 14px; } .portal-login__card { padding: 32px 20px; } .portal-login__options { align-items: flex-start; flex-direction: column; } }
+@media (prefers-reduced-motion: reduce) { .portal-login__logo { animation: none; } }

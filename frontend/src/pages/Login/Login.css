@@ -1,0 +1,248 @@
+.login-page {
+  --login-primary: #16785b;
+  --login-primary-dark: #0d5d46;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 40%) minmax(0, 60%);
+  background: #f5faf8;
+  color: #17352c;
+}
+
+.login-intro {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 48px;
+}
+
+.login-intro__background {
+  position: absolute;
+  z-index: -2;
+  inset: -24px;
+  background: url('https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=format&fit=crop&w=1400&q=85') center / cover no-repeat;
+  filter: blur(5px);
+  transform: scale(1.05);
+}
+
+.login-intro__overlay {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(145deg, rgba(7, 62, 46, 0.9), rgba(18, 120, 87, 0.76));
+}
+
+.login-intro__content {
+  width: 100%;
+  max-width: 540px;
+  text-align: center;
+  color: #fff;
+}
+
+.login-logo {
+  width: 112px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  animation: logo-float 3.2s ease-in-out infinite;
+}
+
+.login-logo__icon {
+  font-size: 64px !important;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.2));
+}
+
+.login-title {
+  max-width: 520px;
+  font-size: clamp(1.8rem, 3vw, 2.65rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.18 !important;
+  letter-spacing: -0.035em !important;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+}
+
+.login-subtitle {
+  font-size: 1.08rem !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.login-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 48px;
+  background:
+    radial-gradient(circle at 90% 8%, rgba(59, 182, 139, 0.18), transparent 27%),
+    radial-gradient(circle at 12% 94%, rgba(255, 193, 92, 0.14), transparent 25%),
+    #f7fbf9;
+}
+
+.login-card {
+  width: min(100%, 510px);
+  padding: clamp(30px, 5vw, 52px);
+  border: 1px solid rgba(22, 120, 91, 0.13);
+  border-radius: 24px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 24px 65px rgba(27, 74, 60, 0.13) !important;
+}
+
+.login-card__heading {
+  margin-bottom: 32px;
+}
+
+.login-card__title {
+  font-size: 2rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  color: #17352c;
+}
+
+.login-card__description {
+  color: #687d76;
+}
+
+.login-card .MuiOutlinedInput-root {
+  border-radius: 13px;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.login-card .MuiOutlinedInput-root:hover {
+  box-shadow: 0 5px 16px rgba(22, 120, 91, 0.08);
+}
+
+.login-card .MuiOutlinedInput-root.Mui-focused {
+  box-shadow: 0 0 0 4px rgba(22, 120, 91, 0.1);
+}
+
+.login-card .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline,
+.login-card .MuiInputLabel-root.Mui-focused {
+  border-color: var(--login-primary);
+  color: var(--login-primary);
+}
+
+.login-card .MuiCheckbox-root.Mui-checked {
+  color: var(--login-primary);
+}
+
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.remember-me {
+  margin-left: -9px !important;
+}
+
+.remember-me .MuiFormControlLabel-label,
+.forgot-password {
+  font-size: 0.92rem !important;
+}
+
+.forgot-password {
+  color: var(--login-primary) !important;
+  font-weight: 700 !important;
+  transition: color 180ms ease;
+}
+
+.forgot-password:hover {
+  color: var(--login-primary-dark) !important;
+}
+
+.sign-in-button {
+  min-height: 52px;
+  border-radius: 13px !important;
+  background: linear-gradient(135deg, #198663, var(--login-primary-dark)) !important;
+  box-shadow: 0 11px 24px rgba(13, 93, 70, 0.24) !important;
+  font-size: 1rem !important;
+  font-weight: 750 !important;
+  text-transform: none !important;
+  transition: transform 180ms ease, box-shadow 180ms ease !important;
+}
+
+.sign-in-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(13, 93, 70, 0.32) !important;
+}
+
+@keyframes logo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-16px);
+  }
+}
+
+@media (max-width: 900px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-intro,
+  .login-form-panel {
+    min-height: auto;
+  }
+
+  .login-intro {
+    padding: 64px 24px 56px;
+  }
+
+  .login-logo {
+    width: 88px;
+    height: 88px;
+    border-radius: 24px;
+  }
+
+  .login-logo__icon {
+    font-size: 50px !important;
+  }
+
+  .login-form-panel {
+    padding: 42px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-intro {
+    padding-block: 52px 42px;
+  }
+
+  .login-form-panel {
+    padding: 24px 14px;
+  }
+
+  .login-card {
+    padding: 28px 20px;
+    border-radius: 19px !important;
+  }
+
+  .login-options {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-logo {
+    animation: none;
+  }
+
+  .sign-in-button,
+  .login-card .MuiOutlinedInput-root {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "smart-campus-mess-portal-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.2.0",
+    "@mui/material": "^9.2.0",
+    "@vitejs/plugin-react": "latest",
+    "axios": "^1.18.1",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "^7.18.1"
+  },
+  "devDependencies": {
+    "vite": "latest"
+  }
+}

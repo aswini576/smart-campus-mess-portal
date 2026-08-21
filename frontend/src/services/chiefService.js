@@ -1,0 +1,17 @@
+import api from './api';
+export const getChiefOverview = () => api.get('/reports/chief-overview').then((r) => r.data);
+export const getAnalytics = (period) => api.get('/reports/analytics', { params: { period } }).then((r) => r.data);
+export const getFoodDemand = () => api.get('/meals/demand').then((r) => r.data);
+export const getChiefMenu = () => api.get('/meals/weekly').then((r) => r.data);
+export const getMenuHistory = () => api.get('/meals').then((r) => r.data);
+export const createMeal = (payload) => api.post('/meals', payload).then((r) => r.data);
+export const updateMeal = (id, payload) => api.put(`/meals/${id}`, payload).then((r) => r.data);
+export const deleteMeal = (id) => api.delete(`/meals/${id}`);
+export const getInventory = () => api.get('/inventory').then((r) => r.data);
+export const createIngredient = (payload) => api.post('/inventory', payload).then((r) => r.data);
+export const updateIngredient = (id, payload) => api.put(`/inventory/${id}`, payload).then((r) => r.data);
+export const deleteIngredient = (id) => api.delete(`/inventory/${id}`);
+export const getInventoryDashboard = () => api.get('/inventory/dashboard').then((r) => r.data);
+export const recordIngredientUsage = (id, payload) => api.post(`/inventory/${id}/usage`, payload).then((r) => r.data);
+export const getFeedbackAnalytics = () => api.get('/feedback/analytics').then((r) => r.data);
+export const getChiefFeedback = () => api.get('/feedback').then((r) => r.data);
