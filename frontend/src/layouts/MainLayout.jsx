@@ -5,14 +5,11 @@ import { useTheme } from '@mui/material/styles';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import RestaurantMenuRoundedIcon from '@mui/icons-material/RestaurantMenuRounded';
 import SpaceDashboardRoundedIcon from '@mui/icons-material/SpaceDashboardRounded';
-import SoupKitchenRoundedIcon from '@mui/icons-material/SoupKitchenRounded';
 import AdminPanelSettingsRoundedIcon from '@mui/icons-material/AdminPanelSettingsRounded';
 import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
-import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded';
 import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
-import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import SwapHorizRoundedIcon from '@mui/icons-material/SwapHorizRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
@@ -23,7 +20,7 @@ import { useAuth } from '../context/AuthContext';
 const drawerWidth = 260;
 const links = [
   { label: 'Dashboard', to: '/student', icon: <SpaceDashboardRoundedIcon />, role: 'student' }, { label: 'Weekly menu', to: '/student/meals', icon: <CalendarMonthRoundedIcon />, role: 'student' }, { label: 'My payments', to: '/student/payments', icon: <PaymentsRoundedIcon />, role: 'student' }, { label: 'Meal recovery', to: '/student/recovery', icon: <SwapHorizRoundedIcon />, role: 'student' }, { label: 'Meal feedback', to: '/student/feedback', icon: <StarRoundedIcon />, role: 'student' }, { label: 'My profile', to: '/student/profile', icon: <PersonRoundedIcon />, role: 'student' },
-  { label: 'Chief dashboard', to: '/mess-chief', icon: <SoupKitchenRoundedIcon />, role: 'messChief' }, { label: 'Menu management', to: '/mess-chief/menu', icon: <RestaurantMenuRoundedIcon />, role: 'messChief' }, { label: 'Inventory dashboard', to: '/mess-chief/inventory', icon: <Inventory2RoundedIcon />, role: 'messChief' }, { label: 'Ingredients', to: '/mess-chief/ingredients', icon: <Inventory2RoundedIcon />, role: 'messChief' }, { label: 'Analytics', to: '/mess-chief/analytics', icon: <AssessmentRoundedIcon />, role: 'messChief' }, { label: 'Feedback & ratings', to: '/mess-chief/feedback', icon: <StarRoundedIcon />, role: 'messChief' }, { label: 'Admin dashboard', to: '/admin', icon: <AdminPanelSettingsRoundedIcon />, role: 'admin' }, { label: 'Menu management', to: '/admin/menu', icon: <RestaurantMenuRoundedIcon />, role: 'admin' }, { label: 'Student menu preview', to: '/admin/student-menu', icon: <CalendarMonthRoundedIcon />, role: 'admin' }, { label: 'Food orders', to: '/admin/orders', icon: <ReceiptLongRoundedIcon />, role: 'admin' }, { label: 'Student and staff', to: '/admin/students', icon: <GroupsRoundedIcon />, role: 'admin' }, { label: 'Mess chiefs', to: '/admin/mess-chiefs', icon: <SoupKitchenRoundedIcon />, role: 'admin' }, { label: 'Payments', to: '/admin/payments', icon: <PaymentsRoundedIcon />, role: 'admin' }, { label: 'Feedback & ratings', to: '/admin/feedback', icon: <StarRoundedIcon />, role: 'admin' }, { label: 'Reports', to: '/admin/reports', icon: <AssessmentRoundedIcon />, role: 'admin' }, { label: 'Settings', to: '/admin/settings', icon: <SettingsRoundedIcon />, role: 'admin' },
+  { label: 'Admin dashboard', to: '/admin', icon: <AdminPanelSettingsRoundedIcon />, role: 'admin' }, { label: 'Menu management', to: '/admin/menu', icon: <RestaurantMenuRoundedIcon />, role: 'admin' }, { label: 'Student menu preview', to: '/admin/student-menu', icon: <CalendarMonthRoundedIcon />, role: 'admin' }, { label: 'Food orders', to: '/admin/orders', icon: <ReceiptLongRoundedIcon />, role: 'admin' }, { label: 'Student and staff', to: '/admin/students', icon: <GroupsRoundedIcon />, role: 'admin' }, { label: 'Payments', to: '/admin/payments', icon: <PaymentsRoundedIcon />, role: 'admin' }, { label: 'Feedback & ratings', to: '/admin/feedback', icon: <StarRoundedIcon />, role: 'admin' }, { label: 'Reports', to: '/admin/reports', icon: <AssessmentRoundedIcon />, role: 'admin' },
 ];
 
 function MainLayout() {

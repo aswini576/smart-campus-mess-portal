@@ -4,6 +4,7 @@ const orderSchema = new mongoose.Schema(
   {
     studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     mealId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meal', required: true },
+    portionSize: { type: String, enum: ['small', 'medium', 'large'], default: 'medium', required: true },
     status: { type: String, enum: ['booked', 'cancelled', 'attended'], default: 'booked', required: true },
     bookingTime: { type: Date, default: Date.now, required: true },
   },

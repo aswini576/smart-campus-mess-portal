@@ -7,7 +7,7 @@ import { login } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 import './LoginPage.css';
 
-const rolePaths = { student: '/student', messChief: '/mess-chief', admin: '/admin' };
+const rolePaths = { student: '/student', admin: '/admin' };
 
 function LoginPage() {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [showPassword, setShowPassword] = useState(false);

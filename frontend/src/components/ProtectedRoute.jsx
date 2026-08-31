@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const rolePaths = { student: '/student', messChief: '/mess-chief', admin: '/admin' };
+const rolePaths = { student: '/student', admin: '/admin' };
 
 function ProtectedRoute({ roles }) {
   const { user } = useAuth();

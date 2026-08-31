@@ -5,20 +5,16 @@ import CssBaseline from '@mui/material/CssBaseline';
 import MainLayout from './layouts/MainLayout';
 import LoginPage from './pages/LoginPage';
 import StudentDashboard from './pages/StudentDashboard';
-import MessChiefDashboard from './pages/MessChiefDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import MealBookingPage from './pages/MealBookingPage';
 import FeedbackPage from './pages/FeedbackPage';
 import ProfilePage from './pages/ProfilePage';
 import MenuManagementPage from './pages/MenuManagementPage';
-import IngredientManagementPage from './pages/IngredientManagementPage';
 import UserManagementPage from './pages/UserManagementPage';
 import ReportsPage from './pages/ReportsPage';
-import SettingsPage from './pages/SettingsPage';
 import MealRecoveryPage from './pages/MealRecoveryPage';
 import ChiefFeedbackPage from './pages/ChiefFeedbackPage';
-import InventoryDashboardPage from './pages/InventoryDashboardPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import { ThemeModeProvider } from './context/ThemeModeContext';
 import StudentPaymentsPage from './pages/StudentPaymentsPage';
@@ -77,8 +73,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route element={<ProtectedRoute roles={['student']} />}><Route path="/student" element={<StudentDashboard />} /><Route path="/student/meals" element={<MealBookingPage />} /><Route path="/student/payments" element={<StudentPaymentsPage />} /><Route path="/student/recovery" element={<MealRecoveryPage />} /><Route path="/student/feedback" element={<FeedbackPage />} /><Route path="/student/profile" element={<ProfilePage />} /></Route>
-            <Route element={<ProtectedRoute roles={['messChief']} />}><Route path="/mess-chief" element={<MessChiefDashboard />} /><Route path="/mess-chief/menu" element={<MenuManagementPage />} /><Route path="/mess-chief/inventory" element={<InventoryDashboardPage />} /><Route path="/mess-chief/ingredients" element={<IngredientManagementPage />} /><Route path="/mess-chief/analytics" element={<ReportsPage />} /><Route path="/mess-chief/feedback" element={<ChiefFeedbackPage />} /></Route>
-            <Route element={<ProtectedRoute roles={['admin']} />}><Route path="/admin" element={<AdminDashboard />} /><Route path="/admin/menu" element={<MenuManagementPage />} /><Route path="/admin/student-menu" element={<AdminStudentMenuPage />} /><Route path="/admin/orders" element={<AdminFoodOrdersPage />} /><Route path="/admin/students" element={<UserManagementPage role="student" title="Student and staff" />} /><Route path="/admin/mess-chiefs" element={<UserManagementPage role="messChief" title="Mess chief management" />} /><Route path="/admin/payments" element={<AdminPaymentsPage />} /><Route path="/admin/feedback" element={<ChiefFeedbackPage />} /><Route path="/admin/reports" element={<ReportsPage />} /><Route path="/admin/settings" element={<SettingsPage />} /></Route>
+            <Route element={<ProtectedRoute roles={['admin']} />}><Route path="/admin" element={<AdminDashboard />} /><Route path="/admin/menu" element={<MenuManagementPage />} /><Route path="/admin/student-menu" element={<AdminStudentMenuPage />} /><Route path="/admin/orders" element={<AdminFoodOrdersPage />} /><Route path="/admin/students" element={<UserManagementPage role="student" title="Student and staff" />} /><Route path="/admin/payments" element={<AdminPaymentsPage />} /><Route path="/admin/feedback" element={<ChiefFeedbackPage />} /><Route path="/admin/reports" element={<ReportsPage />} /></Route>
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />

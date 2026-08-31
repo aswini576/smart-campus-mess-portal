@@ -2,7 +2,7 @@ const router = require('express').Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { getInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem, getLowStock, recordUsage, getUsageHistory, getInventoryDashboard } = require('../controllers/inventoryController');
 
-router.use(protect, authorize('messChief', 'admin'));
+router.use(protect, authorize('admin'));
 router.get('/', getInventory);
 router.get('/dashboard', getInventoryDashboard);
 router.get('/low-stock', getLowStock);

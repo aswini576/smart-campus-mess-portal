@@ -16,7 +16,7 @@ async function connectDB() {
     student_id VARCHAR(80) NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('student', 'messChief', 'admin') NOT NULL DEFAULT 'student',
+    role ENUM('student', 'admin') NOT NULL DEFAULT 'student',
     is_approved BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -41,6 +41,7 @@ async function connectDB() {
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     student_id INT UNSIGNED NOT NULL,
     meal_id INT UNSIGNED NOT NULL,
+    portion_size ENUM('small', 'medium', 'large') NOT NULL DEFAULT 'medium',
     status ENUM('booked', 'cancelled', 'attended') NOT NULL DEFAULT 'booked',
     payment_status ENUM('unpaid', 'paid') NOT NULL DEFAULT 'unpaid',
     booking_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -54,14 +55,8 @@ async function connectDB() {
   if (!mealPriceColumns.length) await pool.query('ALTER TABLE meals ADD COLUMN price DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0 AFTER quantity');
   const [paymentStatusColumns] = await pool.query("SHOW COLUMNS FROM orders LIKE 'payment_status'");
   if (!paymentStatusColumns.length) await pool.query("ALTER TABLE orders ADD COLUMN payment_status ENUM('unpaid', 'paid') NOT NULL DEFAULT 'unpaid' AFTER status");
-  await pool.query(`CREATE TABLE IF NOT EXISTS system_settings (
-    id TINYINT UNSIGNED NOT NULL PRIMARY KEY DEFAULT 1,
-    campus_name VARCHAR(255) NOT NULL DEFAULT 'CampusBite',
-    booking_reminder_hours INT UNSIGNED NOT NULL DEFAULT 4,
-    allow_student_cancellation BOOLEAN NOT NULL DEFAULT TRUE,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-  ) ENGINE=InnoDB`);
-  await pool.execute('INSERT IGNORE INTO system_settings (id) VALUES (1)');
+  const [portionSizeColumns] = await pool.query("SHOW COLUMNS FROM orders LIKE 'portion_size'");
+  if (!portionSizeColumns.length) await pool.query("ALTER TABLE orders ADD COLUMN portion_size ENUM('small', 'medium', 'large') NOT NULL DEFAULT 'medium' AFTER meal_id");
   await pool.query(`CREATE TABLE IF NOT EXISTS feedback (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     student_id INT UNSIGNED NOT NULL,

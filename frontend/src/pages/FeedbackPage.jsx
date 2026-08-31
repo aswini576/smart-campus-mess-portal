@@ -1,13 +1,62 @@
 import { useEffect, useState } from 'react';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { Alert, Box, MenuItem, Rating, Stack, TextField, Typography } from '@mui/material';
-import AppButton from '../components/AppButton'; import AppCard from '../components/AppCard'; import ErrorState from '../components/ErrorState'; import LoadingState from '../components/LoadingState'; import { PageHeading } from './DashboardComponents';
-import { getMyFeedback, getOrderHistory, submitFeedback } from '../services/studentService';
+import AppButton from '../components/AppButton';
+import AppCard from '../components/AppCard';
+import ErrorState from '../components/ErrorState';
+import LoadingState from '../components/LoadingState';
+import { PageHeading } from './DashboardComponents';
+import { deleteFeedback, getMyFeedback, getOrderHistory, submitFeedback } from '../services/studentService';
+
 function FeedbackPage() {
-  const [orders, setOrders] = useState([]); const [feedback, setFeedback] = useState([]); const [mealId, setMealId] = useState(''); const [rating, setRating] = useState(5); const [comment, setComment] = useState(''); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [success, setSuccess] = useState('');
-  const load = async () => { setLoading(true); try { const [history, mine] = await Promise.all([getOrderHistory(), getMyFeedback()]); const eligible = history.orders.filter((order) => order.status !== 'cancelled' && order.mealId); setOrders(eligible); setFeedback(mine.feedback); if (eligible[0]) setMealId((current) => current || eligible[0].mealId._id); } catch (e) { setError(e.response?.data?.message || 'Unable to load feedback details.'); } finally { setLoading(false); } };
+  const [orders, setOrders] = useState([]);
+  const [feedback, setFeedback] = useState([]);
+  const [mealId, setMealId] = useState('');
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const [history, mine] = await Promise.all([getOrderHistory(), getMyFeedback()]);
+      const eligible = history.orders.filter((order) => order.status !== 'cancelled' && order.mealId);
+      setOrders(eligible);
+      setFeedback(mine.feedback);
+      if (eligible[0]) setMealId((current) => current || eligible[0].mealId._id);
+    } catch (e) {
+      setError(e.response?.data?.message || 'Unable to load feedback details.');
+    } finally { setLoading(false); }
+  };
+
   useEffect(() => { load(); }, []);
-  const submit = async (event) => { event.preventDefault(); setError(''); setSuccess(''); try { await submitFeedback({ mealId, rating, comment }); setComment(''); setSuccess('Thank you — your meal rating was saved.'); await load(); } catch (e) { setError(e.response?.data?.message || 'Unable to submit feedback.'); } };
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setError(''); setSuccess('');
+    try {
+      await submitFeedback({ mealId, rating, comment });
+      setComment('');
+      setSuccess('Thank you — your meal rating was saved.');
+      await load();
+    } catch (e) { setError(e.response?.data?.message || 'Unable to submit feedback.'); }
+  };
+
+  const remove = async (feedbackId) => {
+    if (!window.confirm('Delete this feedback? This action cannot be undone.')) return;
+    setError(''); setSuccess('');
+    try {
+      await deleteFeedback(feedbackId);
+      setFeedback((current) => current.filter((item) => item._id !== feedbackId));
+      setSuccess('Your feedback was deleted.');
+    } catch (e) { setError(e.response?.data?.message || 'Unable to delete feedback.'); }
+  };
+
   if (loading) return <LoadingState message="Loading feedback…" />;
-  return <><PageHeading title="Meal feedback" subtitle="Your ratings help the mess team improve future meals." />{error && <Box mb={2}><ErrorState message={error} /></Box>}{success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}<Stack direction={{ xs: 'column', lg: 'row' }} spacing={2.5} alignItems="stretch"><AppCard sx={{ flex: 1.1 }}><Typography variant="h6" fontWeight={800} mb={2}>Rate a meal</Typography>{orders.length ? <Stack component="form" onSubmit={submit} spacing={2}><TextField select label="Confirmed meal" value={mealId} onChange={(event) => setMealId(event.target.value)}><MenuItem value="" disabled>Select a meal</MenuItem>{orders.map((order) => <MenuItem key={order._id} value={order.mealId._id}>{order.mealId.foodName} — {new Date(order.mealId.date).toLocaleDateString()}</MenuItem>)}</TextField><Box><Typography variant="body2" fontWeight={700}>Your rating</Typography><Rating value={rating} onChange={(_event, value) => setRating(value || 1)} size="large" /></Box><TextField label="Comment (optional)" multiline minRows={4} value={comment} onChange={(event) => setComment(event.target.value)} inputProps={{ maxLength: 1000 }} /><AppButton type="submit">Submit feedback</AppButton></Stack> : <Typography color="text.secondary">Confirm a meal first to share feedback.</Typography>}</AppCard><AppCard sx={{ flex: .9 }}><Typography variant="h6" fontWeight={800} mb={2}>Your recent ratings</Typography><Stack spacing={2}>{feedback.length ? feedback.map((item) => <Box key={item._id} sx={{ pb: 1.5, borderBottom: '1px solid #fff0ea' }}><Typography fontWeight={700}>{item.mealId?.foodName || 'Meal'}</Typography><Rating value={item.rating} readOnly size="small" /><Typography variant="body2" color="text.secondary">{item.comment || 'No comment provided.'}</Typography></Box>) : <Typography color="text.secondary">No feedback submitted yet.</Typography>}</Stack></AppCard></Stack></>;
+
+  return <><PageHeading title="Meal feedback" subtitle="Your ratings help the mess team improve future meals." />{error && <Box mb={2}><ErrorState message={error} /></Box>}{success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}<Stack direction={{ xs: 'column', lg: 'row' }} spacing={2.5} alignItems="stretch"><AppCard sx={{ flex: 1.1 }}><Typography variant="h6" fontWeight={800} mb={2}>Rate a meal</Typography>{orders.length ? <Stack component="form" onSubmit={submit} spacing={2}><TextField select label="Confirmed meal" value={mealId} onChange={(event) => setMealId(event.target.value)}><MenuItem value="" disabled>Select a meal</MenuItem>{orders.map((order) => <MenuItem key={order._id} value={order.mealId._id}>{order.mealId.foodName} — {new Date(order.mealId.date).toLocaleDateString()}</MenuItem>)}</TextField><Box><Typography variant="body2" fontWeight={700}>Your rating</Typography><Rating value={rating} onChange={(_event, value) => setRating(value || 1)} size="large" /></Box><TextField label="Comment (optional)" multiline minRows={4} value={comment} onChange={(event) => setComment(event.target.value)} inputProps={{ maxLength: 1000 }} /><AppButton type="submit">Submit feedback</AppButton></Stack> : <Typography color="text.secondary">Confirm a meal first to share feedback.</Typography>}</AppCard><AppCard sx={{ flex: .9 }}><Typography variant="h6" fontWeight={800} mb={2}>Your recent ratings</Typography><Stack spacing={2}>{feedback.length ? feedback.map((item) => <Box key={item._id} sx={{ pb: 1.5, borderBottom: '1px solid #fff0ea' }}><Typography fontWeight={700}>{item.mealId?.foodName || 'Meal'}</Typography><Rating value={item.rating} readOnly size="small" /><Typography variant="body2" color="text.secondary">{item.comment || 'No comment provided.'}</Typography><AppButton color="secondary" size="small" variant="outlined" startIcon={<DeleteOutlineRoundedIcon />} onClick={() => remove(item._id)} sx={{ mt: 1 }}>Delete</AppButton></Box>) : <Typography color="text.secondary">No feedback submitted yet.</Typography>}</Stack></AppCard></Stack></>;
 }
+
 export default FeedbackPage;

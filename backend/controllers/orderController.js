@@ -1,18 +1,20 @@
 const { getPool } = require('../config/db');
 
-const orderSelect = `SELECT o.id AS _id, o.status, o.booking_time AS bookingTime,
+const orderSelect = `SELECT o.id AS _id, o.status, o.portion_size AS portionSize, o.booking_time AS bookingTime,
   m.id AS mealIdValue, m.meal_type AS mealType, m.food_name AS foodName,
   m.meal_date AS mealDate, m.booking_deadline AS bookingDeadline
   FROM orders o LEFT JOIN meals m ON m.id = o.meal_id`;
 
 function presentOrder(row) {
-  return { _id: row._id, status: row.status, bookingTime: row.bookingTime, mealId: row.mealIdValue ? { _id: row.mealIdValue, mealType: row.mealType, foodName: row.foodName, date: row.mealDate, bookingDeadline: row.bookingDeadline } : null };
+  return { _id: row._id, status: row.status, portionSize: row.portionSize, bookingTime: row.bookingTime, mealId: row.mealIdValue ? { _id: row.mealIdValue, mealType: row.mealType, foodName: row.foodName, date: row.mealDate, bookingDeadline: row.bookingDeadline } : null };
 }
 
 async function bookMeal(request, response, next) {
   try {
     const mealId = Number(request.body.mealId);
     if (!Number.isInteger(mealId) || mealId < 1) return response.status(400).json({ message: 'A valid meal is required.' });
+    const portionSize = String(request.body.portionSize || '').toLowerCase();
+    if (!['small', 'medium', 'large'].includes(portionSize)) return response.status(400).json({ message: 'Please select a valid food size.' });
     const pool = getPool();
     const [meals] = await pool.execute('SELECT id, is_available AS isAvailable, booking_deadline AS bookingDeadline FROM meals WHERE id = ? LIMIT 1', [mealId]);
     const meal = meals[0];
@@ -22,8 +24,8 @@ async function bookMeal(request, response, next) {
     const [existing] = await pool.execute('SELECT id, status FROM orders WHERE student_id = ? AND meal_id = ? LIMIT 1', [request.user.id, mealId]);
     if (existing[0] && existing[0].status !== 'cancelled') return response.status(409).json({ message: 'You have already confirmed this meal.' });
     let orderId;
-    if (existing[0]) { orderId = existing[0].id; await pool.execute("UPDATE orders SET status = 'booked', booking_time = CURRENT_TIMESTAMP WHERE id = ?", [orderId]); }
-    else { const [result] = await pool.execute('INSERT INTO orders (student_id, meal_id) VALUES (?, ?)', [request.user.id, mealId]); orderId = result.insertId; }
+    if (existing[0]) { orderId = existing[0].id; await pool.execute("UPDATE orders SET status = 'booked', portion_size = ?, booking_time = CURRENT_TIMESTAMP WHERE id = ?", [portionSize, orderId]); }
+    else { const [result] = await pool.execute('INSERT INTO orders (student_id, meal_id, portion_size) VALUES (?, ?, ?)', [request.user.id, mealId, portionSize]); orderId = result.insertId; }
     const [rows] = await pool.execute(`${orderSelect} WHERE o.id = ?`, [orderId]);
     return response.status(201).json({ order: presentOrder(rows[0]) });
   } catch (error) { return next(error); }

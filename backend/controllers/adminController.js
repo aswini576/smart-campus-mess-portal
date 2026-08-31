@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const { getPool } = require('../config/db');
 
-const roles = ['student', 'messChief', 'admin'];
+const roles = ['student', 'admin'];
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function listUsers(request, response, next) {
@@ -63,20 +63,4 @@ async function getAttendanceStats(_request, response, next) {
   } catch (error) { return next(error); }
 }
 
-async function getSettings(_request, response, next) {
-  try {
-    const [rows] = await getPool().execute('SELECT campus_name AS campusName, booking_reminder_hours AS bookingReminderHours, allow_student_cancellation AS allowStudentCancellation FROM system_settings WHERE id = 1');
-    return response.status(200).json({ settings: rows[0] });
-  } catch (error) { return next(error); }
-}
-
-async function updateSettings(request, response, next) {
-  try {
-    const hours = Number(request.body.bookingReminderHours);
-    if (!request.body.campusName?.trim() || !Number.isInteger(hours) || hours < 0) return response.status(400).json({ message: 'Provide a campus name and valid reminder hours of 0 or more.' });
-    await getPool().execute('UPDATE system_settings SET campus_name = ?, booking_reminder_hours = ?, allow_student_cancellation = ? WHERE id = 1', [request.body.campusName.trim(), hours, request.body.allowStudentCancellation !== false]);
-    return getSettings(request, response, next);
-  } catch (error) { return next(error); }
-}
-
-module.exports = { listUsers, createUser, updateUser, deleteUser, setStudentApproval, getAttendanceStats, getSettings, updateSettings };
+module.exports = { listUsers, createUser, updateUser, deleteUser, setStudentApproval, getAttendanceStats };

@@ -43,6 +43,16 @@ async function getMyFeedback(request, response, next) {
   } catch (error) { return next(error); }
 }
 
+async function deleteMyFeedback(request, response, next) {
+  try {
+    const feedbackId = Number(request.params.feedbackId);
+    if (!Number.isInteger(feedbackId) || feedbackId < 1) return response.status(400).json({ message: 'Select valid feedback to delete.' });
+    const [result] = await getPool().execute('DELETE FROM feedback WHERE id = ? AND student_id = ?', [feedbackId, request.user.id]);
+    if (!result.affectedRows) return response.status(404).json({ message: 'Feedback not found.' });
+    return response.status(200).json({ message: 'Feedback deleted successfully.' });
+  } catch (error) { return next(error); }
+}
+
 async function getFeedbackForChief(_request, response, next) {
   try {
     const [rows] = await getPool().query(`${feedbackSelect} ORDER BY f.created_at DESC`);
@@ -66,4 +76,4 @@ async function getFeedbackAnalytics(_request, response, next) {
   } catch (error) { return next(error); }
 }
 
-module.exports = { createFeedback, getMyFeedback, getFeedbackForChief, getFeedbackAnalytics };
+module.exports = { createFeedback, deleteMyFeedback, getMyFeedback, getFeedbackForChief, getFeedbackAnalytics };
