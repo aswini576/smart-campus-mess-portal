@@ -27,11 +27,16 @@ async function connectDB() {
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     meal_type ENUM('breakfast', 'lunch', 'dinner', 'snack') NOT NULL,
     food_name VARCHAR(255) NOT NULL,
+    food_category ENUM('veg', 'non_veg') NOT NULL DEFAULT 'veg',
     meal_date DATETIME NOT NULL,
     booking_deadline DATETIME NOT NULL,
+    booking_open_time TIME NOT NULL DEFAULT '00:00:00',
+    booking_close_time TIME NOT NULL DEFAULT '23:59:59',
     is_available BOOLEAN NOT NULL DEFAULT TRUE,
     quantity INT UNSIGNED NOT NULL DEFAULT 0,
     price DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0,
+    original_cost DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0,
+    mess_payment_amount DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0,
     ingredients JSON NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -44,6 +49,10 @@ async function connectDB() {
     portion_size ENUM('small', 'medium', 'large') NOT NULL DEFAULT 'medium',
     status ENUM('booked', 'cancelled', 'attended') NOT NULL DEFAULT 'booked',
     payment_status ENUM('unpaid', 'paid') NOT NULL DEFAULT 'unpaid',
+    paid_amount DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0,
+    payment_date DATETIME NULL,
+    received_at DATETIME NULL,
+    wasted_at DATETIME NULL,
     booking_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -53,10 +62,36 @@ async function connectDB() {
   ) ENGINE=InnoDB`);
   const [mealPriceColumns] = await pool.query("SHOW COLUMNS FROM meals LIKE 'price'");
   if (!mealPriceColumns.length) await pool.query('ALTER TABLE meals ADD COLUMN price DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0 AFTER quantity');
+  const [originalCostColumns] = await pool.query("SHOW COLUMNS FROM meals LIKE 'original_cost'");
+  if (!originalCostColumns.length) await pool.query("ALTER TABLE meals ADD COLUMN original_cost DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0 AFTER price");
+  const [messPaymentColumns] = await pool.query("SHOW COLUMNS FROM meals LIKE 'mess_payment_amount'");
+  if (!messPaymentColumns.length) await pool.query("ALTER TABLE meals ADD COLUMN mess_payment_amount DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0 AFTER original_cost");
+  const [foodCategoryColumns] = await pool.query("SHOW COLUMNS FROM meals LIKE 'food_category'");
+  if (!foodCategoryColumns.length) await pool.query("ALTER TABLE meals ADD COLUMN food_category ENUM('veg', 'non_veg') NOT NULL DEFAULT 'veg' AFTER food_name");
+  const [bookingOpenColumns] = await pool.query("SHOW COLUMNS FROM meals LIKE 'booking_open_time'");
+  if (!bookingOpenColumns.length) await pool.query("ALTER TABLE meals ADD COLUMN booking_open_time TIME NOT NULL DEFAULT '00:00:00' AFTER booking_deadline");
+  const [bookingCloseColumns] = await pool.query("SHOW COLUMNS FROM meals LIKE 'booking_close_time'");
+  if (!bookingCloseColumns.length) {
+    await pool.query("ALTER TABLE meals ADD COLUMN booking_close_time TIME NOT NULL DEFAULT '23:59:59' AFTER booking_open_time");
+    await pool.query("UPDATE meals SET booking_close_time = TIME(booking_deadline)");
+  }
   const [paymentStatusColumns] = await pool.query("SHOW COLUMNS FROM orders LIKE 'payment_status'");
   if (!paymentStatusColumns.length) await pool.query("ALTER TABLE orders ADD COLUMN payment_status ENUM('unpaid', 'paid') NOT NULL DEFAULT 'unpaid' AFTER status");
+  const [paidAmountColumns] = await pool.query("SHOW COLUMNS FROM orders LIKE 'paid_amount'");
+  if (!paidAmountColumns.length) {
+    await pool.query("ALTER TABLE orders ADD COLUMN paid_amount DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0 AFTER payment_status");
+    await pool.query("UPDATE orders o JOIN meals m ON m.id = o.meal_id SET o.paid_amount = m.price WHERE o.payment_status = 'paid'");
+  }
+  const [paymentDateColumns] = await pool.query("SHOW COLUMNS FROM orders LIKE 'payment_date'");
+  if (!paymentDateColumns.length) await pool.query("ALTER TABLE orders ADD COLUMN payment_date DATETIME NULL AFTER paid_amount");
   const [portionSizeColumns] = await pool.query("SHOW COLUMNS FROM orders LIKE 'portion_size'");
   if (!portionSizeColumns.length) await pool.query("ALTER TABLE orders ADD COLUMN portion_size ENUM('small', 'medium', 'large') NOT NULL DEFAULT 'medium' AFTER meal_id");
+  const [receivedAtColumns] = await pool.query("SHOW COLUMNS FROM orders LIKE 'received_at'");
+  if (!receivedAtColumns.length) await pool.query("ALTER TABLE orders ADD COLUMN received_at DATETIME NULL AFTER booking_time");
+  const [wastedAtColumns] = await pool.query("SHOW COLUMNS FROM orders LIKE 'wasted_at'");
+  if (!wastedAtColumns.length) await pool.query("ALTER TABLE orders ADD COLUMN wasted_at DATETIME NULL AFTER received_at");
+  const [bookingBlockedColumns] = await pool.query("SHOW COLUMNS FROM users LIKE 'booking_blocked_until'");
+  if (!bookingBlockedColumns.length) await pool.query("ALTER TABLE users ADD COLUMN booking_blocked_until DATETIME NULL AFTER is_approved");
   await pool.query(`CREATE TABLE IF NOT EXISTS feedback (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     student_id INT UNSIGNED NOT NULL,
@@ -84,6 +119,50 @@ async function connectDB() {
     CONSTRAINT fk_offer_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     CONSTRAINT fk_offer_original_student FOREIGN KEY (original_student_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_offer_claimed_student FOREIGN KEY (claimed_student_id) REFERENCES users(id) ON DELETE SET NULL
+  ) ENGINE=InnoDB`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS inventory (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    item_name VARCHAR(255) NOT NULL UNIQUE,
+    quantity DECIMAL(12,3) UNSIGNED NOT NULL DEFAULT 0,
+    unit VARCHAR(50) NOT NULL,
+    low_stock_threshold DECIMAL(12,3) UNSIGNED NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS inventory_usage (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    inventory_id INT UNSIGNED NULL, item_name VARCHAR(255) NOT NULL,
+    quantity DECIMAL(12,3) UNSIGNED NOT NULL, unit VARCHAR(50) NOT NULL,
+    meal_id INT UNSIGNED NULL, note VARCHAR(500) NOT NULL DEFAULT '',
+    used_by INT UNSIGNED NOT NULL, used_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_inventory_usage_item_date (inventory_id, used_at), INDEX idx_inventory_usage_date (used_at),
+    CONSTRAINT fk_usage_inventory FOREIGN KEY (inventory_id) REFERENCES inventory(id) ON DELETE SET NULL,
+    CONSTRAINT fk_usage_meal FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE SET NULL,
+    CONSTRAINT fk_usage_user FOREIGN KEY (used_by) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS waste_predictions (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, prediction_date DATE NOT NULL UNIQUE,
+    expected_users INT UNSIGNED NOT NULL DEFAULT 0, food_required DECIMAL(12,2) UNSIGNED NOT NULL DEFAULT 0,
+    waste_amount DECIMAL(12,2) UNSIGNED NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS mess_payments (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    week_start DATE NOT NULL UNIQUE,
+    payable_amount DECIMAL(12,2) UNSIGNED NOT NULL DEFAULT 0,
+    status ENUM('pending', 'paid') NOT NULL DEFAULT 'pending',
+    payment_date DATETIME NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS ai_suggestions (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, suggestion_date DATE NOT NULL UNIQUE,
+    response JSON NOT NULL, expected_users INT UNSIGNED NOT NULL DEFAULT 0,
+    meal_count INT UNSIGNED NOT NULL DEFAULT 0, historical_waste_kg DECIMAL(12,2) UNSIGNED NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   ) ENGINE=InnoDB`);
   connected = true;
   console.log(`MySQL connected: ${dbHost}/${dbName}`);

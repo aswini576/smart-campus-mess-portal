@@ -1,12 +1,15 @@
 import api from './api';
 export const getChiefOverview = () => api.get('/reports/chief-overview').then((r) => r.data);
 export const getAnalytics = (period) => api.get('/reports/analytics', { params: { period } }).then((r) => r.data);
+export const getOriginalFoodCostReport = () => api.get('/reports/original-food-cost').then((r) => r.data);
+export const getStudentPaymentReport = () => api.get('/reports/student-payments').then((r) => r.data);
 export const getFoodDemand = () => api.get('/meals/demand').then((r) => r.data);
 export const getChiefMenu = () => api.get('/meals/weekly').then((r) => r.data);
 export const getMenuHistory = () => api.get('/meals').then((r) => r.data);
 export const createMeal = (payload) => api.post('/meals', payload).then((r) => r.data);
-export const updateMeal = (id, payload) => api.put(`/meals/${id}`, payload).then((r) => r.data);
-export const deleteMeal = (id) => api.delete(`/meals/${id}`);
+export const createMealOptions = (payload) => api.post('/meals/options', payload).then((r) => r.data);
+export const updateMeal = (id, payload) => api.put(`/meals/${encodeURIComponent(String(id))}`, payload).then((r) => r.data);
+export const deleteMeal = (id) => api.delete(`/meals/${encodeURIComponent(String(id))}`);
 export const getInventory = () => api.get('/inventory').then((r) => r.data);
 export const createIngredient = (payload) => api.post('/inventory', payload).then((r) => r.data);
 export const updateIngredient = (id, payload) => api.put(`/inventory/${id}`, payload).then((r) => r.data);
@@ -15,3 +18,6 @@ export const getInventoryDashboard = () => api.get('/inventory/dashboard').then(
 export const recordIngredientUsage = (id, payload) => api.post(`/inventory/${id}/usage`, payload).then((r) => r.data);
 export const getFeedbackAnalytics = () => api.get('/feedback/analytics').then((r) => r.data);
 export const getChiefFeedback = () => api.get('/feedback').then((r) => r.data);
+export const getFoodReceipts = () => api.get('/admin/food-received').then((r) => r.data);
+export const getMessPayments = () => api.get('/mess-payments').then((r) => r.data);
+export const markMessPaymentPaid = (weekStart) => api.patch('/mess-payments/paid', { weekStart }).then((r) => r.data);

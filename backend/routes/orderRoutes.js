@@ -1,11 +1,12 @@
 const router = require('express').Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
-const { bookMeal, cancelBooking, getOrderHistory, offerMeal, getAvailableMeals, claimMeal, getOfferedMeals, getClaimedMeals } = require('../controllers/orderController');
+const { bookMeal, cancelBooking, getOrderHistory, markFoodReceived, offerMeal, getAvailableMeals, claimMeal, getOfferedMeals, getClaimedMeals } = require('../controllers/orderController');
 
 router.use(protect, authorize('student'));
 router.get('/history', getOrderHistory);
 router.post('/', bookMeal);
 router.patch('/:orderId/cancel', cancelBooking);
+router.patch('/:orderId/received', markFoodReceived);
 router.post('/offer-meal', offerMeal);
 router.get('/available-meals', getAvailableMeals);
 router.post('/claim-meal', claimMeal);

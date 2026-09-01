@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Box, Button, Grid, Stack, Typography } from '@mui/material';
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
 import AppCard from '../components/AppCard';
+import AppTable from '../components/AppTable';
 import ErrorState from '../components/ErrorState';
 import LoadingState from '../components/LoadingState';
 import { MetricCard, PageHeading } from './DashboardComponents';
@@ -20,14 +21,15 @@ function downloadPdfReport(period, report) {
     `Generated: ${new Date().toLocaleString()}`,
     '',
     'Summary',
-    `Food waste reduction: ${summary.waste_reduction_percent}%`,
-    `Predicted food waste: ${summary.waste_kg} kg`,
-    `Confirmed attendance: ${summary.attendance}`,
-    `Confirmed meal bookings: ${summary.demand}`,
+    `Total food orders: ${summary.total_food_orders}`,
+    `Food received: ${summary.food_received}`,
+    `Food not received: ${summary.food_not_received}`,
+    `Uncollected meals: ${summary.uncollected_meals}`,
+    `Wasted food cost: Rs. ${Number(summary.wasted_food_cost).toFixed(2)}`,
     `Inventory issued: ${summary.inventory_used} units`,
     '',
-    'Attendance and Waste Trend',
-    ...(series.length ? series.map((item) => `${label(item.date)} - Attendance: ${item.attendance}, Predicted waste: ${item.waste_kg} kg`) : ['No data recorded for this period.']),
+    'Daily Food Collection',
+    ...(series.length ? series.map((item) => `${label(item.date)} - Orders: ${item.total_food_orders}, Received: ${item.food_received}, Not received: ${item.food_not_received}, Uncollected: ${item.uncollected_meals}, Wasted cost: Rs. ${Number(item.wasted_food_cost).toFixed(2)}`) : ['No data recorded for this period.']),
     '',
     'Meal Demand',
     ...(mealDemand.length ? mealDemand.map((item) => `${item.meal_type}: ${item.count}`) : ['No data recorded for this period.']),
@@ -73,10 +75,10 @@ function ReportsPage() {
   if (error) return <ErrorState message={error} />;
   const { summary, series, meal_demand: mealDemand, inventory_usage: inventoryUsage } = report;
   return <><PageHeading title="Analytics dashboard" subtitle="Food operations and demand insights." action={<Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end"><Button variant="outlined" size="small" startIcon={<FileDownloadRoundedIcon />} onClick={() => downloadPdfReport(period, report)}>Download PDF</Button>{periods.map((item) => <Button key={item} variant={period === item ? 'contained' : 'outlined'} size="small" onClick={() => setPeriod(item)} sx={{ textTransform: 'capitalize' }}>{item}</Button>)}</Stack>} />
-    <Grid container spacing={2.5}><Grid size={{ xs: 12, sm: 6, lg: 3 }}><MetricCard title="Food waste reduction" value={`${summary.waste_reduction_percent}%`} note={`${summary.waste_kg} kg predicted waste`} color="#2e7d32" /></Grid><Grid size={{ xs: 12, sm: 6, lg: 3 }}><MetricCard title="Attendance" value={summary.attendance} note="Confirmed meal attendance" /></Grid><Grid size={{ xs: 12, sm: 6, lg: 3 }}><MetricCard title="Meal demand" value={summary.demand} note="Confirmed meal bookings" color="#1565c0" /></Grid><Grid size={{ xs: 12, sm: 6, lg: 3 }}><MetricCard title="Inventory usage" value={summary.inventory_used} note="Units issued from inventory" color="#7b1fa2" /></Grid>
-      <Grid size={{ xs: 12, md: 7 }}><AppCard sx={{ height: '100%' }}><Typography variant="h6" fontWeight={800} mb={.5}>Attendance trend</Typography><Typography variant="body2" color="text.secondary" mb={2}>Confirmed bookings across the selected period.</Typography><AttendanceChart data={series} /></AppCard></Grid>
+    <Grid container spacing={2.5}><Grid size={{ xs: 12, sm: 6, lg: 2.4 }}><MetricCard title="Total Food Orders" value={summary.total_food_orders} note="Confirmed orders" color="#1565c0" /></Grid><Grid size={{ xs: 12, sm: 6, lg: 2.4 }}><MetricCard title="Food Received" value={summary.food_received} note="Collected in time" color="#2e7d32" /></Grid><Grid size={{ xs: 12, sm: 6, lg: 2.4 }}><MetricCard title="Food Not Received" value={summary.food_not_received} note="Not yet confirmed" color="#ed6c02" /></Grid><Grid size={{ xs: 12, sm: 6, lg: 2.4 }}><MetricCard title="Uncollected Meals" value={summary.uncollected_meals} note="Window expired" color="#d32f2f" /></Grid><Grid size={{ xs: 12, sm: 6, lg: 2.4 }}><MetricCard title="Wasted Food Cost" value={`Rs. ${Number(summary.wasted_food_cost).toFixed(2)}`} note="Cost of uncollected meals" color="#7b1fa2" /></Grid>
+      <Grid size={{ xs: 12, md: 7 }}><AppCard sx={{ height: '100%' }}><Typography variant="h6" fontWeight={800} mb={.5}>Food received trend</Typography><Typography variant="body2" color="text.secondary" mb={2}>Meals collected across the selected period.</Typography><AttendanceChart data={series} /></AppCard></Grid>
       <Grid size={{ xs: 12, md: 5 }}><AppCard sx={{ height: '100%' }}><Typography variant="h6" fontWeight={800} mb={.5}>Meal demand</Typography><Typography variant="body2" color="text.secondary" mb={2.5}>Demand by meal type.</Typography><HorizontalBars entries={mealDemand} /></AppCard></Grid>
-      <Grid size={{ xs: 12, md: 6 }}><AppCard><Typography variant="h6" fontWeight={800} mb={.5}>Food waste</Typography><Typography variant="body2" color="text.secondary" mb={2.5}>Daily waste prediction in kilograms.</Typography><HorizontalBars entries={series.map((item) => ({ item: label(item.date), quantity: item.waste_kg }))} valueKey="quantity" suffix=" kg" /></AppCard></Grid>
+      <Grid size={{ xs: 12 }}><AppCard><Typography variant="h6" fontWeight={800} mb={.5}>Daily food collection and waste</Typography><Typography variant="body2" color="text.secondary" mb={2.5}>Only expired receiving windows count as uncollected and wasted.</Typography><AppTable columns={[{ key: 'date', label: 'Date' }, { key: 'orders', label: 'Total Food Orders' }, { key: 'received', label: 'Food Received' }, { key: 'notReceived', label: 'Food Not Received' }, { key: 'uncollected', label: 'Uncollected Meals' }, { key: 'cost', label: 'Wasted Food Cost' }]} rows={series.map((item) => ({ id: item.date, date: label(item.date), orders: item.total_food_orders, received: item.food_received, notReceived: item.food_not_received, uncollected: item.uncollected_meals, cost: `Rs. ${Number(item.wasted_food_cost).toFixed(2)}` }))} /></AppCard></Grid>
       <Grid size={{ xs: 12, md: 6 }}><AppCard><Typography variant="h6" fontWeight={800} mb={.5}>Inventory usage</Typography><Typography variant="body2" color="text.secondary" mb={2.5}>Most-used ingredients in this period.</Typography><HorizontalBars entries={inventoryUsage} valueKey="quantity" /></AppCard></Grid>
     </Grid></>;
 }

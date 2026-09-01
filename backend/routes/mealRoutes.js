@@ -1,12 +1,13 @@
 const router = require('express').Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
-const { getWeeklyMenu, getMeals, createMeal, updateMeal, deleteMeal, getFoodDemand } = require('../controllers/mealController');
+const { getWeeklyMenu, getMeals, createMeal, createMealOptions, updateMeal, deleteMeal, getFoodDemand } = require('../controllers/mealController');
 
 router.get('/weekly', protect, authorize('student', 'admin'), getWeeklyMenu);
 router.use(protect, authorize('admin'));
 router.get('/', getMeals);
 router.get('/demand', getFoodDemand);
 router.post('/', createMeal);
+router.post('/options', createMealOptions);
 router.put('/:mealId', updateMeal);
 router.delete('/:mealId', deleteMeal);
 module.exports = router;

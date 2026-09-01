@@ -63,4 +63,15 @@ async function getAttendanceStats(_request, response, next) {
   } catch (error) { return next(error); }
 }
 
-module.exports = { listUsers, createUser, updateUser, deleteUser, setStudentApproval, getAttendanceStats };
+async function getFoodReceipts(_request, response, next) {
+  try {
+    const [receipts] = await getPool().query(`SELECT o.id AS _id, o.received_at AS receivedAt,
+      o.portion_size AS portionSize, u.name AS studentName, u.student_id AS studentId,
+      u.email AS studentEmail, m.food_name AS foodName, m.meal_type AS mealType,
+      m.meal_date AS mealDate FROM orders o JOIN users u ON u.id = o.student_id
+      JOIN meals m ON m.id = o.meal_id WHERE o.received_at IS NOT NULL ORDER BY o.received_at DESC`);
+    return response.json({ receipts });
+  } catch (error) { return next(error); }
+}
+
+module.exports = { listUsers, createUser, updateUser, deleteUser, setStudentApproval, getAttendanceStats, getFoodReceipts };

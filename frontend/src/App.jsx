@@ -20,6 +20,9 @@ import { ThemeModeProvider } from './context/ThemeModeContext';
 import StudentPaymentsPage from './pages/StudentPaymentsPage';
 import AdminPaymentsPage from './pages/AdminPaymentsPage';
 import AdminFoodOrdersPage from './pages/AdminFoodOrdersPage';
+import AdminFoodReceivedPage from './pages/AdminFoodReceivedPage';
+import FinancialReportsPage from './pages/FinancialReportsPage';
+import MessPaymentsPage from './pages/MessPaymentsPage';
 import AdminStudentMenuPage from './pages/AdminStudentMenuPage';
 
 function App() {
@@ -28,10 +31,10 @@ function App() {
   const theme = useMemo(() => createTheme({
     palette: {
       mode,
-      primary: { main: '#ff5722', dark: '#e64a19', light: '#ff8a65', contrastText: '#ffffff' },
-      secondary: { main: '#f97316' },
+      primary: { main: '#4b1606', dark: '#e64a19', light: '#ff8a65', contrastText: '#ffffff' },
+      secondary: { main: '#e46205' },
       background: { default: '#fff7ed', paper: '#ffffff' },
-      text: { primary: '#1e293b', secondary: '#64748b' },
+      text: { primary: '#1d2a3d', secondary: '#64748b' },
       divider: '#e7e5e4',
     },
     typography: { fontFamily: 'Inter, "Segoe UI", Roboto, Arial, sans-serif', h4: { fontWeight: 800, letterSpacing: '-0.035em' }, h6: { fontWeight: 750, letterSpacing: '-0.015em' }, button: { fontWeight: 700, letterSpacing: '.01em' } },
@@ -73,7 +76,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route element={<ProtectedRoute roles={['student']} />}><Route path="/student" element={<StudentDashboard />} /><Route path="/student/meals" element={<MealBookingPage />} /><Route path="/student/payments" element={<StudentPaymentsPage />} /><Route path="/student/recovery" element={<MealRecoveryPage />} /><Route path="/student/feedback" element={<FeedbackPage />} /><Route path="/student/profile" element={<ProfilePage />} /></Route>
-            <Route element={<ProtectedRoute roles={['admin']} />}><Route path="/admin" element={<AdminDashboard />} /><Route path="/admin/menu" element={<MenuManagementPage />} /><Route path="/admin/student-menu" element={<AdminStudentMenuPage />} /><Route path="/admin/orders" element={<AdminFoodOrdersPage />} /><Route path="/admin/students" element={<UserManagementPage role="student" title="Student and staff" />} /><Route path="/admin/payments" element={<AdminPaymentsPage />} /><Route path="/admin/feedback" element={<ChiefFeedbackPage />} /><Route path="/admin/reports" element={<ReportsPage />} /></Route>
+            <Route element={<ProtectedRoute roles={['admin']} />}><Route path="/admin" element={<AdminDashboard />} /><Route path="/admin/menu" element={<MenuManagementPage />} /><Route path="/admin/student-menu" element={<AdminStudentMenuPage />} /><Route path="/admin/orders" element={<AdminFoodOrdersPage />} /><Route path="/admin/food-received" element={<AdminFoodReceivedPage />} /><Route path="/admin/students" element={<UserManagementPage role="student" title="Student and staff" />} /><Route path="/admin/payments" element={<AdminPaymentsPage />} /><Route path="/admin/mess-payments" element={<MessPaymentsPage />} /><Route path="/admin/feedback" element={<ChiefFeedbackPage />} /><Route path="/admin/reports" element={<ReportsPage />} /><Route path="/admin/financial-reports" element={<FinancialReportsPage />} /></Route>
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
