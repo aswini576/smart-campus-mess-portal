@@ -1,9 +1,15 @@
 const attempts = new Map();
 const windowMs = 15 * 60 * 1000;
 const maxAttempts = 10;
+const { nodeEnv } = require('../config/env');
 
 function authRateLimit(request, response, next) {
-  const key = request.ip || request.socket.remoteAddress || 'unknown';
+  // Local development frequently retries requests while the UI/server reloads.
+  // Keep brute-force protection enabled in deployed environments only.
+  if (nodeEnv === 'development') return next();
+
+  const address = request.ip || request.socket.remoteAddress || 'unknown';
+  const key = `${address}:${request.path}`;
   const now = Date.now();
   const entry = attempts.get(key);
   if (!entry || now - entry.startedAt >= windowMs) {
