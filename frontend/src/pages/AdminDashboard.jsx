@@ -7,7 +7,7 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import { MetricCard, PageHeading } from './DashboardComponents';
 import { getAttendanceStats } from '../services/adminService';
-import adminBackground from '../assets/images/campus-administration-background.jpg';
+import adminBackground from '../components/images/campus-administration-background.jpg';
 
 function AdminDashboard() {
   const [stats, setStats] = useState(null);

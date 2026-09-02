@@ -4,30 +4,30 @@ const orderSelect = `SELECT o.id AS _id, o.status, o.portion_size AS portionSize
   o.received_at AS receivedAt,
   m.id AS mealIdValue, m.meal_type AS mealType, m.food_name AS foodName, m.food_category AS foodCategory,
   m.meal_date AS mealDate, m.booking_deadline AS bookingDeadline,
-  m.booking_open_time AS openingTime, m.booking_close_time AS closingTime
+  m.booking_open_time AS openingTime, m.booking_close_time AS closingTime,
+  m.receive_open_time AS receiveOpeningTime, m.receive_close_time AS receiveClosingTime
   FROM orders o LEFT JOIN meals m ON m.id = o.meal_id`;
 
 function presentOrder(row) {
-  return { _id: row._id, status: row.status, portionSize: row.portionSize, bookingTime: row.bookingTime, receivedAt: row.receivedAt, mealId: row.mealIdValue ? { _id: row.mealIdValue, mealType: row.mealType, foodName: row.foodName, foodCategory: row.foodCategory, date: row.mealDate, bookingDeadline: row.bookingDeadline, openingTime: row.openingTime, closingTime: row.closingTime } : null };
+  return { _id: row._id, status: row.status, portionSize: row.portionSize, bookingTime: row.bookingTime, receivedAt: row.receivedAt, mealId: row.mealIdValue ? { _id: row.mealIdValue, mealType: row.mealType, foodName: row.foodName, foodCategory: row.foodCategory, date: row.mealDate, bookingDeadline: row.bookingDeadline, openingTime: row.openingTime, closingTime: row.closingTime, receiveOpeningTime: row.receiveOpeningTime, receiveClosingTime: row.receiveClosingTime } : null };
 }
 
-const servingHours = { breakfast: [7, 9], lunch: [12, 14], snack: [15, 17], dinner: [18, 20] };
-
-function receiveWindow(mealDate, mealType) {
+function receiveWindow(mealDate, openingTime, closingTime) {
   const date = new Date(mealDate);
-  const [startHour, endHour] = servingHours[mealType] || servingHours.lunch;
-  const start = new Date(date); start.setHours(startHour, 0, 0, 0);
-  const end = new Date(date); end.setHours(endHour, 0, 0, 0);
+  const [startHour, startMinute, startSecond] = String(openingTime || '12:00:00').split(':').map(Number);
+  const [endHour, endMinute, endSecond] = String(closingTime || '14:00:00').split(':').map(Number);
+  const start = new Date(date); start.setHours(startHour, startMinute, startSecond || 0, 0);
+  const end = new Date(date); end.setHours(endHour, endMinute, endSecond || 0, 0);
   return { start, end };
 }
 
 async function refreshStudentPenalty(pool, studentId) {
   const [rows] = await pool.execute(`SELECT o.id, o.received_at AS receivedAt, o.wasted_at AS wastedAt,
-    m.meal_date AS mealDate, m.meal_type AS mealType FROM orders o JOIN meals m ON m.id = o.meal_id
+    m.meal_date AS mealDate, m.receive_open_time AS receiveOpeningTime, m.receive_close_time AS receiveClosingTime FROM orders o JOIN meals m ON m.id = o.meal_id
     WHERE o.student_id = ? AND o.status <> 'cancelled' ORDER BY m.meal_date`, [studentId]);
   const now = new Date(); const completedDays = new Map(); const newlyWasted = [];
   rows.forEach((row) => {
-    const { end } = receiveWindow(row.mealDate, row.mealType);
+    const { end } = receiveWindow(row.mealDate, row.receiveOpeningTime, row.receiveClosingTime);
     if (now < end) return;
     const key = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
     const day = completedDays.get(key) || { date: new Date(end.getFullYear(), end.getMonth(), end.getDate()), end, received: false, missed: false };
@@ -86,7 +86,9 @@ async function cancelBooking(request, response, next) {
     const order = rows[0];
     if (!order) return response.status(404).json({ message: 'Booking not found.' });
     if (new Date() > new Date(order.bookingDeadline)) return response.status(400).json({ message: 'The opt-out deadline has passed.' });
-    await getPool().execute("UPDATE orders SET status = 'cancelled' WHERE id = ?", [request.params.orderId]);
+    const pool = getPool();
+    await pool.execute("UPDATE orders SET status = 'cancelled', paid_amount = 0, payment_status = 'unpaid', payment_date = NULL WHERE id = ?", [request.params.orderId]);
+    await pool.execute("UPDATE offered_meals SET status = 'cancelled' WHERE order_id = ? AND status = 'offered'", [request.params.orderId]);
     order.status = 'cancelled';
     return response.status(200).json({ order: presentOrder(order) });
   } catch (error) { return next(error); }
@@ -103,7 +105,7 @@ async function markFoodReceived(request, response, next) {
     const order = rows[0];
     if (!order || order.status === 'cancelled') return response.status(404).json({ message: 'Confirmed meal booking not found.' });
     if (order.receivedAt || order.status === 'attended') return response.status(409).json({ message: 'Food has already been marked as received.' });
-    const { start, end } = receiveWindow(order.mealDate, order.mealType);
+    const { start, end } = receiveWindow(order.mealDate, order.receiveOpeningTime, order.receiveClosingTime);
     const now = new Date();
     if (now < start) return response.status(400).json({ message: `Food Received is available from ${start.toLocaleString()}.` });
     if (now >= end) return response.status(400).json({ message: `The food receiving window ended at ${end.toLocaleString()}.` });
@@ -160,16 +162,17 @@ async function claimMeal(request, response, next) {
     if (!Number.isInteger(offeredMealId) || offeredMealId < 1) return response.status(400).json({ message: 'A valid offered meal is required.' });
     await connection.beginTransaction();
     const [offers] = await connection.execute(`SELECT om.id, om.order_id AS orderId, om.original_student_id AS originalStudentId,
-      om.status, om.expiry_time AS expiryTime, o.meal_id AS mealId FROM offered_meals om
+      om.status, om.expiry_time AS expiryTime, o.meal_id AS mealId, o.status AS orderStatus FROM offered_meals om
       JOIN orders o ON o.id = om.order_id WHERE om.id = ? FOR UPDATE`, [offeredMealId]);
     const offer = offers[0];
     if (!offer || offer.status !== 'offered') { await connection.rollback(); return response.status(409).json({ message: 'This offered meal is no longer available.' }); }
+    if (offer.orderStatus !== 'booked') { await connection.execute("UPDATE offered_meals SET status = 'cancelled' WHERE id = ?", [offeredMealId]); await connection.commit(); return response.status(409).json({ message: 'The original booking is no longer active.' }); }
     if (new Date() >= new Date(offer.expiryTime)) { await connection.execute("UPDATE offered_meals SET status = 'expired' WHERE id = ?", [offeredMealId]); await connection.commit(); return response.status(400).json({ message: 'This offered meal has expired.' }); }
     if (Number(offer.originalStudentId) === Number(request.user.id)) { await connection.rollback(); return response.status(400).json({ message: 'You cannot claim your own offered meal.' }); }
     const [duplicates] = await connection.execute('SELECT id, status FROM orders WHERE student_id = ? AND meal_id = ? LIMIT 1', [request.user.id, offer.mealId]);
     if (duplicates[0] && duplicates[0].status !== 'cancelled') { await connection.rollback(); return response.status(409).json({ message: 'You already have a booking for this meal.' }); }
     if (duplicates[0]) await connection.execute('DELETE FROM orders WHERE id = ?', [duplicates[0].id]);
-    await connection.execute("UPDATE orders SET student_id = ?, payment_status = 'unpaid', received_at = NULL, wasted_at = NULL WHERE id = ?", [request.user.id, offer.orderId]);
+    await connection.execute("UPDATE orders SET student_id = ?, paid_amount = 0, payment_status = 'unpaid', payment_date = NULL, received_at = NULL, wasted_at = NULL WHERE id = ?", [request.user.id, offer.orderId]);
     await connection.execute("UPDATE offered_meals SET claimed_student_id = ?, claimed_time = NOW(), status = 'claimed' WHERE id = ?", [request.user.id, offeredMealId]);
     await connection.commit();
     const [rows] = await getPool().execute(`${offerSelect} WHERE om.id = ?`, [offeredMealId]);

@@ -11,17 +11,18 @@ const paymentSelect = `SELECT o.id AS _id,
   FROM orders o JOIN meals m ON m.id = o.meal_id JOIN users u ON u.id = o.student_id`;
 
 async function getMyPayments(request, response, next) {
-  try { const [payments] = await getPool().execute(`${paymentSelect} WHERE o.student_id = ? ORDER BY m.meal_date DESC`, [request.user.id]); return response.json({ payments }); } catch (error) { return next(error); }
+  try { const [payments] = await getPool().execute(`${paymentSelect} WHERE o.student_id = ? AND o.status <> 'cancelled' ORDER BY m.meal_date DESC`, [request.user.id]); return response.json({ payments }); } catch (error) { return next(error); }
 }
 
 async function getPayments(_request, response, next) {
-  try { const [payments] = await getPool().query(`${paymentSelect} ORDER BY m.meal_date DESC, u.name`); return response.json({ payments }); } catch (error) { return next(error); }
+  try { const [payments] = await getPool().query(`${paymentSelect} WHERE o.status <> 'cancelled' ORDER BY m.meal_date DESC, u.name`); return response.json({ payments }); } catch (error) { return next(error); }
 }
 
 async function updatePaymentStatus(request, response, next) {
   try {
-    const [orders] = await getPool().execute('SELECT m.price FROM orders o JOIN meals m ON m.id = o.meal_id WHERE o.id = ?', [request.params.orderId]);
+    const [orders] = await getPool().execute('SELECT m.price, o.status FROM orders o JOIN meals m ON m.id = o.meal_id WHERE o.id = ?', [request.params.orderId]);
     if (!orders[0]) return response.status(404).json({ message: 'Meal booking not found.' });
+    if (orders[0].status === 'cancelled') return response.status(400).json({ message: 'A cancelled meal has no payment amount.' });
     const totalAmount = Number(orders[0].price);
     const paidAmount = request.body.paidAmount === undefined
       ? (request.body.status === 'paid' ? totalAmount : 0)
@@ -40,4 +41,12 @@ async function updatePaymentStatus(request, response, next) {
   } catch (error) { return next(error); }
 }
 
-module.exports = { getMyPayments, getPayments, updatePaymentStatus };
+async function deleteOrder(request, response, next) {
+  try {
+    const [result] = await getPool().execute('DELETE FROM orders WHERE id = ?', [request.params.orderId]);
+    if (!result.affectedRows) return response.status(404).json({ message: 'Order record not found.' });
+    return response.status(204).send();
+  } catch (error) { return next(error); }
+}
+
+module.exports = { getMyPayments, getPayments, updatePaymentStatus, deleteOrder };

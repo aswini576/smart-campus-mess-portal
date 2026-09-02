@@ -92,7 +92,12 @@ async function getStudentPaymentReport(_request, response, next) {
       MAX(o.payment_date) AS paymentDate
       FROM users u JOIN orders o ON o.student_id = u.id AND o.status <> 'cancelled'
       JOIN meals m ON m.id = o.meal_id WHERE u.role = 'student' GROUP BY u.id ORDER BY u.name`);
-    return response.json({ students: students.map((student) => ({ ...student, status: Number(student.balance) === 0 ? 'paid' : 'pending' })) });
+    const summary = students.reduce((totals, student) => ({
+      totalAmount: totals.totalAmount + Number(student.totalAmount || 0),
+      totalPaid: totals.totalPaid + Number(student.amountPaid || 0),
+      totalBalance: totals.totalBalance + Number(student.balance || 0),
+    }), { totalAmount: 0, totalPaid: 0, totalBalance: 0 });
+    return response.json({ students: students.map((student) => ({ ...student, status: Number(student.balance) === 0 ? 'paid' : 'pending' })), summary });
   } catch (error) { return next(error); }
 }
 

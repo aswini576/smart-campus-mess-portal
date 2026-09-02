@@ -11,11 +11,11 @@ import { bookMeal, cancelBooking, getOrderHistory, getWeeklyMenu, markFoodReceiv
 const FOOD_SIZES = ['Small', 'Medium', 'Large'];
 const formatDate = (value) => new Date(value).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 const displaySize = (value = 'medium') => value.charAt(0).toUpperCase() + value.slice(1);
-const servingHours = { breakfast: [7, 9], lunch: [12, 14], snack: [15, 17], dinner: [18, 20] };
 const receiveWindow = (meal) => {
-  const [startHour, endHour] = servingHours[meal.mealType] || servingHours.lunch;
-  const start = new Date(meal.date); start.setHours(startHour, 0, 0, 0);
-  const end = new Date(meal.date); end.setHours(endHour, 0, 0, 0);
+  const [startHour, startMinute, startSecond] = String(meal.receiveOpeningTime || '12:00:00').split(':').map(Number);
+  const [endHour, endMinute, endSecond] = String(meal.receiveClosingTime || '14:00:00').split(':').map(Number);
+  const start = new Date(meal.date); start.setHours(startHour, startMinute, startSecond || 0, 0);
+  const end = new Date(meal.date); end.setHours(endHour, endMinute, endSecond || 0, 0);
   return { start, end };
 };
 const bookingDateTime = (meal, time, fallback) => { const date = new Date(meal.date); const [hour, minute, second] = String(time || fallback).split(':').map(Number); date.setHours(hour, minute, second || 0, 0); return date; };
@@ -85,6 +85,7 @@ function MealBookingPage() {
         const { start: receiveStart, end: receiveEnd } = receiveWindow(meal);
         const canReceive = Boolean(order) && order.status === 'booked' && now >= receiveStart.getTime() && now < receiveEnd.getTime();
         const received = Boolean(order?.receivedAt) || order?.status === 'attended';
+        const receiveWarning = now < receiveStart.getTime() ? `You can click Mark Food Received only from ${receiveStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to ${receiveEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.` : now >= receiveEnd.getTime() ? `Food receiving closed at ${receiveEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.` : `Food receiving is open until ${receiveEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
         return <Grid key={meal._id} size={{ xs: 12, md: 6, xl: 4 }}>
           <AppCard sx={{ height: '100%' }}>
             <Stack direction="row" justifyContent="space-between" spacing={1}><Stack direction="row" spacing={0.75}><Chip label={meal.mealType} color="primary" size="small" /><Chip label={meal.foodCategory === 'non_veg' ? 'Non-Veg' : 'Veg'} color={meal.foodCategory === 'non_veg' ? 'error' : 'success'} size="small" /></Stack><Typography variant="caption" color="text.secondary">{formatDate(meal.date)}</Typography></Stack>
@@ -99,6 +100,7 @@ function MealBookingPage() {
             <Stack direction="row" spacing={1} mt={2} useFlexGap flexWrap="wrap">
               {order ? <><AppButton color="secondary" disabled={expired || received} onClick={() => act(() => cancelBooking(order._id))}>{expired ? 'Deadline passed' : 'Opt out'}</AppButton><AppButton disabled={expired || received} onClick={() => act(() => offerMeal(order._id), 'Your meal is now available for another student to claim.')}>Offer meal</AppButton><AppButton color="success" disabled={!canReceive} onClick={() => act(() => markFoodReceived(order._id), 'Food received successfully.')}>{received ? 'Food Received' : 'Mark Food Received'}</AppButton></> : <><AppButton variant="outlined" disabled={Boolean(bookingStatus)} onClick={(event) => setSizeMenu({ anchorEl: event.currentTarget, mealId: meal._id })}>{selectedSize ? `Size: ${selectedSize}` : 'Select size'}</AppButton><AppButton disabled={Boolean(bookingStatus) || !selectedSize} onClick={() => act(() => bookMeal(meal._id, selectedSize), `${selectedSize} meal booked successfully.`)}>Confirm attendance</AppButton></>}
             </Stack>
+            {order && !received && <Alert severity={canReceive ? 'success' : 'warning'} sx={{ mt: 1.5, py: .25 }}>{receiveWarning}</Alert>}
             {order && !received && <Typography variant="caption" color={canReceive ? 'success.main' : 'text.secondary'} display="block" mt={1}>Food receiving time: {receiveStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – {receiveEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Typography>}
           </AppCard>
         </Grid>;

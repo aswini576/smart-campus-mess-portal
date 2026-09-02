@@ -13,9 +13,10 @@ async function calculatedWeeks(pool) {
 
 async function getMessPayments(_request, response, next) {
   try {
-    const pool = getPool(); const [weeks, [saved]] = await Promise.all([calculatedWeeks(pool), pool.query('SELECT id AS _id, DATE_FORMAT(week_start, \'%Y-%m-%d\') AS weekStart, payable_amount AS payableAmount, status, payment_date AS paymentDate FROM mess_payments ORDER BY week_start DESC')]);
+    const pool = getPool(); const [weeks, [saved], [hidden]] = await Promise.all([calculatedWeeks(pool), pool.query('SELECT id AS _id, DATE_FORMAT(week_start, \'%Y-%m-%d\') AS weekStart, payable_amount AS payableAmount, status, payment_date AS paymentDate FROM mess_payments WHERE is_hidden = FALSE ORDER BY week_start DESC'), pool.query("SELECT DATE_FORMAT(week_start, '%Y-%m-%d') AS weekStart FROM mess_payments WHERE is_hidden = TRUE")]);
+    const hiddenWeeks = new Set(hidden.map((item) => item.weekStart));
     const records = new Map(saved.map((item) => [item.weekStart, item]));
-    weeks.forEach((week) => { if (!records.has(week.weekStart)) records.set(week.weekStart, { _id: `week-${week.weekStart}`, weekStart: week.weekStart, payableAmount: week.payableAmount, status: 'pending', paymentDate: null }); else if (records.get(week.weekStart).status === 'pending') records.get(week.weekStart).payableAmount = week.payableAmount; });
+    weeks.forEach((week) => { if (hiddenWeeks.has(week.weekStart)) return; if (!records.has(week.weekStart)) records.set(week.weekStart, { _id: `week-${week.weekStart}`, weekStart: week.weekStart, payableAmount: week.payableAmount, status: 'pending', paymentDate: null }); else if (records.get(week.weekStart).status === 'pending') records.get(week.weekStart).payableAmount = week.payableAmount; });
     return response.json({ payments: [...records.values()].sort((a, b) => b.weekStart.localeCompare(a.weekStart)) });
   } catch (error) { return next(error); }
 }
@@ -30,10 +31,20 @@ async function markMessPaymentPaid(request, response, next) {
       JOIN meals m ON m.id = o.meal_id WHERE o.status <> 'cancelled' AND m.meal_date >= ? AND m.meal_date < ?`, [start, end]);
     const payableAmount = Number(rows[0].payableAmount || 0);
     await getPool().execute(`INSERT INTO mess_payments (week_start, payable_amount, status, payment_date)
-      VALUES (?, ?, 'paid', CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE payable_amount = VALUES(payable_amount), status = 'paid', payment_date = CURRENT_TIMESTAMP`, [weekStart, payableAmount]);
+      VALUES (?, ?, 'paid', CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE payable_amount = VALUES(payable_amount), status = 'paid', payment_date = CURRENT_TIMESTAMP, is_hidden = FALSE`, [weekStart, payableAmount]);
     const [payments] = await getPool().execute("SELECT id AS _id, DATE_FORMAT(week_start, '%Y-%m-%d') AS weekStart, payable_amount AS payableAmount, status, payment_date AS paymentDate FROM mess_payments WHERE week_start = ?", [weekStart]);
     return response.json({ payment: payments[0], message: 'Mess payment marked as paid.' });
   } catch (error) { return next(error); }
 }
 
-module.exports = { getMessPayments, markMessPaymentPaid };
+async function deleteMessPayment(request, response, next) {
+  try {
+    const { weekStart } = request.params;
+    if (!weekPattern.test(weekStart || '')) return response.status(400).json({ message: 'A valid week is required.' });
+    await getPool().execute(`INSERT INTO mess_payments (week_start, payable_amount, status, is_hidden)
+      VALUES (?, 0, 'pending', TRUE) ON DUPLICATE KEY UPDATE is_hidden = TRUE`, [weekStart]);
+    return response.status(204).send();
+  } catch (error) { return next(error); }
+}
+
+module.exports = { getMessPayments, markMessPaymentPaid, deleteMessPayment };

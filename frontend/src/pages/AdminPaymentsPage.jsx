@@ -7,7 +7,7 @@ import AppTable from '../components/AppTable';
 import ErrorState from '../components/ErrorState';
 import LoadingState from '../components/LoadingState';
 import { PageHeading } from './DashboardComponents';
-import { getPayments, updatePaymentStatus } from '../services/paymentService';
+import { deleteOrderRecord, getPayments, updatePaymentStatus } from '../services/paymentService';
 
 function AdminPaymentsPage() {
   const [payments, setPayments] = useState(null);
@@ -45,6 +45,7 @@ function AdminPaymentsPage() {
   const money = (amount) => `Rs. ${Number(amount || 0).toFixed(2)}`;
   const rows = filteredPayments.map((item) => ({
     id: item._id,
+    bulkDelete: () => deleteOrderRecord(item._id),
     student: <Box><Typography fontWeight={700}>{item.studentName}</Typography><Typography variant="caption" color="text.secondary">{item.studentEmail}</Typography></Box>,
     totalAmount: money(item.totalAmount),
     paidAmount: <TextField size="small" type="number" value={paidAmounts[item._id] ?? item.paidAmount ?? 0} onChange={(event) => setPaidAmounts((current) => ({ ...current, [item._id]: event.target.value }))} slotProps={{ htmlInput: { min: 0, max: Number(item.totalAmount), step: '0.01', 'aria-label': `Paid amount for ${item.studentName}` } }} sx={{ width: 130 }} />,

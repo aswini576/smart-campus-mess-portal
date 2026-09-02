@@ -18,11 +18,14 @@ async function connectDB() {
     password VARCHAR(255) NOT NULL,
     role ENUM('student', 'admin') NOT NULL DEFAULT 'student',
     is_approved BOOLEAN NOT NULL DEFAULT TRUE,
+    profile_image LONGTEXT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   ) ENGINE=InnoDB`);
   const [approvalColumns] = await pool.query("SHOW COLUMNS FROM users LIKE 'is_approved'");
   if (!approvalColumns.length) await pool.query('ALTER TABLE users ADD COLUMN is_approved BOOLEAN NOT NULL DEFAULT TRUE AFTER role');
+  const [profileImageColumns] = await pool.query("SHOW COLUMNS FROM users LIKE 'profile_image'");
+  if (!profileImageColumns.length) await pool.query('ALTER TABLE users ADD COLUMN profile_image LONGTEXT NULL AFTER is_approved');
   await pool.query(`CREATE TABLE IF NOT EXISTS meals (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     meal_type ENUM('breakfast', 'lunch', 'dinner', 'snack') NOT NULL,
@@ -32,6 +35,8 @@ async function connectDB() {
     booking_deadline DATETIME NOT NULL,
     booking_open_time TIME NOT NULL DEFAULT '00:00:00',
     booking_close_time TIME NOT NULL DEFAULT '23:59:59',
+    receive_open_time TIME NOT NULL DEFAULT '12:00:00',
+    receive_close_time TIME NOT NULL DEFAULT '14:00:00',
     is_available BOOLEAN NOT NULL DEFAULT TRUE,
     quantity INT UNSIGNED NOT NULL DEFAULT 0,
     price DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0,
@@ -74,6 +79,16 @@ async function connectDB() {
   if (!bookingCloseColumns.length) {
     await pool.query("ALTER TABLE meals ADD COLUMN booking_close_time TIME NOT NULL DEFAULT '23:59:59' AFTER booking_open_time");
     await pool.query("UPDATE meals SET booking_close_time = TIME(booking_deadline)");
+  }
+  const [receiveOpenColumns] = await pool.query("SHOW COLUMNS FROM meals LIKE 'receive_open_time'");
+  if (!receiveOpenColumns.length) {
+    await pool.query("ALTER TABLE meals ADD COLUMN receive_open_time TIME NOT NULL DEFAULT '12:00:00' AFTER booking_close_time");
+    await pool.query("UPDATE meals SET receive_open_time = CASE meal_type WHEN 'breakfast' THEN '07:00:00' WHEN 'lunch' THEN '12:00:00' WHEN 'snack' THEN '15:00:00' WHEN 'dinner' THEN '18:00:00' END");
+  }
+  const [receiveCloseColumns] = await pool.query("SHOW COLUMNS FROM meals LIKE 'receive_close_time'");
+  if (!receiveCloseColumns.length) {
+    await pool.query("ALTER TABLE meals ADD COLUMN receive_close_time TIME NOT NULL DEFAULT '14:00:00' AFTER receive_open_time");
+    await pool.query("UPDATE meals SET receive_close_time = CASE meal_type WHEN 'breakfast' THEN '09:00:00' WHEN 'lunch' THEN '14:00:00' WHEN 'snack' THEN '17:00:00' WHEN 'dinner' THEN '20:00:00' END");
   }
   const [paymentStatusColumns] = await pool.query("SHOW COLUMNS FROM orders LIKE 'payment_status'");
   if (!paymentStatusColumns.length) await pool.query("ALTER TABLE orders ADD COLUMN payment_status ENUM('unpaid', 'paid') NOT NULL DEFAULT 'unpaid' AFTER status");
@@ -154,9 +169,12 @@ async function connectDB() {
     payable_amount DECIMAL(12,2) UNSIGNED NOT NULL DEFAULT 0,
     status ENUM('pending', 'paid') NOT NULL DEFAULT 'pending',
     payment_date DATETIME NULL,
+    is_hidden BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   ) ENGINE=InnoDB`);
+  const [messPaymentHiddenColumns] = await pool.query("SHOW COLUMNS FROM mess_payments LIKE 'is_hidden'");
+  if (!messPaymentHiddenColumns.length) await pool.query('ALTER TABLE mess_payments ADD COLUMN is_hidden BOOLEAN NOT NULL DEFAULT FALSE AFTER payment_date');
   await pool.query(`CREATE TABLE IF NOT EXISTS ai_suggestions (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, suggestion_date DATE NOT NULL UNIQUE,
     response JSON NOT NULL, expected_users INT UNSIGNED NOT NULL DEFAULT 0,

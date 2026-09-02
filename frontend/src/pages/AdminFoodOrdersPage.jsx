@@ -6,7 +6,7 @@ import AppTable from '../components/AppTable';
 import ErrorState from '../components/ErrorState';
 import LoadingState from '../components/LoadingState';
 import { PageHeading } from './DashboardComponents';
-import { getPayments } from '../services/paymentService';
+import { deleteOrderRecord, getPayments } from '../services/paymentService';
 
 function AdminFoodOrdersPage() {
   const [orders, setOrders] = useState(null);
@@ -27,6 +27,7 @@ function AdminFoodOrdersPage() {
 
   const rows = filtered.map((order) => ({
     id: order._id,
+    bulkDelete: () => deleteOrderRecord(order._id),
     student: <Box><Typography fontWeight={700}>{order.studentName}</Typography><Typography variant="caption" color="text.secondary">{order.studentEmail}</Typography></Box>,
     food: <Box><Typography fontWeight={700}>{order.foodName}</Typography><Typography variant="caption" color="text.secondary" textTransform="capitalize">{order.mealType}</Typography></Box>,
     date: new Date(order.mealDate).toLocaleDateString(),

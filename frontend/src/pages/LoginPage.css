@@ -1,4 +1,4 @@
-.portal-login { min-height: 100vh; display: grid; grid-template-columns: 52% 48%; background: url('../assets/images/campusbite-students-dining.jpeg') center / cover fixed no-repeat; color: #1e293b; }
+.portal-login { min-height: 100vh; display: grid; grid-template-columns: 52% 48%; background: url('../components/images/campusbite-students-dining.jpeg') center / cover fixed no-repeat; color: #1e293b; }
 .portal-login__brand, .portal-login__form-side { position: relative; display: grid; place-items: center; min-height: 100vh; overflow: hidden; padding: 48px; }
 .portal-login__brand { background: transparent; border-right: 1px solid rgba(255,255,255,.22); }
 .portal-login__brand::before { content: ''; position: absolute; inset: 0; z-index: 0; background: linear-gradient(90deg, rgba(17,12,9,.88) 0%, rgba(22,15,11,.74) 52%, rgba(28,17,11,.48) 100%); }
@@ -6,8 +6,13 @@
 .portal-login__brand-content { z-index: 1; width: min(100%, 650px); text-align: center; }
 .portal-login__logo { position: relative; z-index: 2; align-self: center; width: 120px; height: 120px; margin: 0 auto 10px; display: grid; place-items: center; flex-shrink: 0; border-radius: 34px; background: linear-gradient(145deg, #ff5a36, #f44336); box-shadow: 0 24px 55px rgba(244,67,54,.34); animation: campus-logo-float 2.6s ease-in-out infinite; will-change: transform; }
 .portal-login__logo svg { color: #ffffff; fill: #ffffff; font-size: 68px; }
-.portal-login__name { color: #ffffff; text-shadow: 0 3px 20px rgba(0,0,0,.45); font-size: clamp(3rem, 5vw, 4.6rem) !important; line-height: 1 !important; font-weight: 900 !important; letter-spacing: -.06em !important; }
-.portal-login__name span { color: #ff5722; }
+.portal-login__name {
+  color: #ff5722;
+  font-size: clamp(3rem, 5vw, 4.6rem);
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -.06em;
+}
 .portal-login__tagline { max-width: 620px; text-shadow: 0 2px 12px rgba(0,0,0,.6); font-size: clamp(1.15rem, 2vw, 1.55rem) !important; font-weight: 750 !important; color: #fff7ed; }
 .portal-login__description { max-width: 600px; text-shadow: 0 2px 10px rgba(0,0,0,.65); font-size: 1.05rem !important; line-height: 1.8 !important; color: #f5f5f4; }
 .portal-login__chip { color: #ffffff !important; border: 1px solid rgba(255,255,255,.42) !important; background: rgba(17,12,9,.52) !important; backdrop-filter: blur(8px); font-weight: 700 !important; }

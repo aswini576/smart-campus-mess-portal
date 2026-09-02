@@ -7,7 +7,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 async function listUsers(request, response, next) {
   try {
     if (request.query.role && !roles.includes(request.query.role)) return response.status(400).json({ message: 'Invalid user role.' });
-    const sql = request.query.role ? 'SELECT id AS _id, id, name, student_id AS studentId, email, role, is_approved AS isApproved, created_at AS createdAt FROM users WHERE role = ? ORDER BY created_at DESC' : 'SELECT id AS _id, id, name, student_id AS studentId, email, role, is_approved AS isApproved, created_at AS createdAt FROM users ORDER BY created_at DESC';
+    const sql = request.query.role ? 'SELECT id AS _id, id, name, student_id AS studentId, email, role, is_approved AS isApproved, profile_image AS profileImage, created_at AS createdAt FROM users WHERE role = ? ORDER BY created_at DESC' : 'SELECT id AS _id, id, name, student_id AS studentId, email, role, is_approved AS isApproved, profile_image AS profileImage, created_at AS createdAt FROM users ORDER BY created_at DESC';
     const [users] = await getPool().execute(sql, request.query.role ? [request.query.role] : []);
     return response.status(200).json({ users });
   } catch (error) { return next(error); }

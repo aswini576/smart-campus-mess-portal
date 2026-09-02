@@ -21,3 +21,4 @@ export const getChiefFeedback = () => api.get('/feedback').then((r) => r.data);
 export const getFoodReceipts = () => api.get('/admin/food-received').then((r) => r.data);
 export const getMessPayments = () => api.get('/mess-payments').then((r) => r.data);
 export const markMessPaymentPaid = (weekStart) => api.patch('/mess-payments/paid', { weekStart }).then((r) => r.data);
+export const deleteMessPayment = (weekStart) => api.delete(`/mess-payments/${encodeURIComponent(weekStart)}`);

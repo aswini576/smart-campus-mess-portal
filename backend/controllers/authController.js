@@ -5,7 +5,7 @@ const { jwtSecret } = require('../config/env');
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function createToken(user) { if (!jwtSecret) throw new Error('JWT_SECRET is not configured.'); return jwt.sign({ userId: user.id, role: user.role }, jwtSecret, { expiresIn: '7d', algorithm: 'HS256' }); }
-function publicUser(user) { return { id: user.id, name: user.name, studentId: user.student_id || null, email: user.email, role: user.role, isApproved: Boolean(user.is_approved) }; }
+function publicUser(user) { return { id: user.id, name: user.name, studentId: user.student_id || null, email: user.email, role: user.role, isApproved: Boolean(user.is_approved), profileImage: user.profile_image || null }; }
 function authResponse(user) { return { token: createToken(user), user: publicUser(user) }; }
 
 async function register(request, response, next) {
@@ -29,7 +29,7 @@ async function login(request, response, next) {
     const { email, password } = request.body;
     if (!email || !password || typeof email !== 'string' || typeof password !== 'string') return response.status(400).json({ message: 'Email or username and password are required.' });
     const identifier = email.trim();
-    const [users] = await getPool().execute('SELECT id, name, student_id, email, password, role, is_approved FROM users WHERE email = ? OR student_id = ? LIMIT 1', [identifier.toLowerCase(), identifier]);
+    const [users] = await getPool().execute('SELECT id, name, student_id, email, password, role, is_approved, profile_image FROM users WHERE email = ? OR student_id = ? LIMIT 1', [identifier.toLowerCase(), identifier]);
     const user = users[0];
     if (!user || !(await bcrypt.compare(password, user.password))) return response.status(401).json({ message: 'Invalid email or password.' });
     if (user.role === 'student' && !user.is_approved) return response.status(403).json({ message: 'Your account is waiting for administrator approval.' });
