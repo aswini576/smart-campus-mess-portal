@@ -69,8 +69,8 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/admin/login" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage loginRole="student" />} />
+        <Route path="/admin/login" element={<LoginPage loginRole="admin" />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/admin/forgot-password" element={<ForgotPasswordPage />} />
         <Route element={<ProtectedRoute />}>
